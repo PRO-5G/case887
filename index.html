@@ -107,6 +107,7 @@
             overflow: hidden;
             background: #2d2d2d;
             margin: 0 10px;
+            flex-shrink: 0;
         }
 
         .spin-item img {
@@ -387,6 +388,11 @@
             margin: 15px 0;
         }
 
+        .open-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
         .items-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -440,13 +446,71 @@
         .coming-soon {
             opacity: 0.6;
         }
+
+        .payment-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .payment-tab {
+            flex: 1;
+            padding: 10px;
+            background: #3a3a3a;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .payment-tab.active {
+            background: #ff6b6b;
+        }
+
+        .promo-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #555;
+            background: #1a1a1a;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .apply-btn {
+            width: 100%;
+            padding: 12px;
+            background: #4cd964;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn {
+            width: 100%;
+            padding: 10px;
+            background: #555;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .soon-text {
+            text-align: center;
+            color: #888;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Шапка с навигацией -->
         <div class="header">
-            <div class="stars-count">⭐ Звёзд: <span id="starsCount">0</span></div>
+            <div class="stars-count">⭐ Звёзд: <span id="starsCount">100</span></div>
             <div class="nav-buttons">
                 <button class="nav-btn active" onclick="showSection('cases')">Кейсы</button>
                 <button class="nav-btn" onclick="showSection('inventory')">Инвентарь</button>
@@ -525,7 +589,8 @@
 
         <!-- Раздел кейсов -->
         <div id="casesSection">
-            <div class="cases-grid">
+            <div class="cases-grid" id="casesSelection">
+                <!-- Кейс 1: Столовка -->
                 <div class="case-window" onclick="selectCase('stolovka')">
                     <div class="case-image">
                         <img src="images/stolovka.png" alt="Столовка">
@@ -537,6 +602,7 @@
                     </div>
                 </div>
 
+                <!-- Кейс 2: На создании -->
                 <div class="case-window coming-soon" onclick="selectCase('newcase')">
                     <div class="case-image">
                         <img src="images/coming_soon.png" alt="Скоро">
@@ -548,6 +614,7 @@
                 </div>
             </div>
 
+            <!-- Детали кейса Столовка -->
             <div id="stolovkaDetails" class="case-details">
                 <button class="back-btn" onclick="backToSelection()">← Назад</button>
                 
@@ -627,7 +694,7 @@
     </div>
 
     <script>
-        let stars = 0;
+        let stars = 100;
         let usedPromoCodes = new Set();
         let inventory = [];
         let currentSellItem = null;
@@ -742,7 +809,6 @@
             updateInventory();
             hideSellModal();
             
-            // Показываем уведомление о продаже
             alert(`✅ Предмет "${item.name}" продан за ${item.value} звёзд!`);
         }
 
@@ -763,7 +829,6 @@
             alert('✅ Ник @pro112f скопирован! Отправьте его менеджеру вместе со скриншотом.');
         }
 
-        // Улучшенная анимация открытия кейса
         function openCase(caseId) {
             const caseData = cases[caseId];
             if (stars < caseData.price) {
@@ -772,6 +837,7 @@
                 return;
             }
             
+            // Сразу списываем звёзды
             stars -= caseData.price;
             updateStars();
             
@@ -782,7 +848,7 @@
             
             // Заполняем колесо прокрутки
             spinningItems.innerHTML = '';
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 30; i++) {
                 const randomItem = caseData.items[Math.floor(Math.random() * caseData.items.length)];
                 spinningItems.innerHTML += `
                     <div class="spin-item">
@@ -797,14 +863,18 @@
             
             // Анимация прокрутки
             let position = 0;
-            let speed = 5;
+            let speed = 10;
+            const totalItems = 30;
+            const itemWidth = 120; // 100px + 20px margin
+            
             const animation = setInterval(() => {
                 position += speed;
                 spinningItems.style.transform = `translateX(-${position}px)`;
                 
+                // Замедляем
                 if (position > 1000) {
-                    speed *= 0.95;
-                    if (speed < 0.5) {
+                    speed *= 0.96;
+                    if (speed < 0.3) {
                         clearInterval(animation);
                         
                         // Определяем выигранный предмет
@@ -826,13 +896,17 @@
                                 </div>
                             `;
                             result.style.display = 'block';
-                        }, 2000);
+                            
+                            // Обновляем инвентарь если открыт
+                            if (document.getElementById('inventorySection').style.display === 'block') {
+                                updateInventory();
+                            }
+                        }, 1500);
                     }
                 }
             }, 16);
         }
 
-        // Остальные функции остаются без изменений
         function showPaymentModal() {
             document.getElementById('paymentModal').style.display = 'flex';
         }
@@ -897,6 +971,10 @@
 
         // Инициализация
         updateStars();
+        
+        // Тестовые предметы для демонстрации
+        // addToInventory({ name: "Календарь", value: 10, image: "item1.png" });
+        // addToInventory({ name: "Роза", value: 15, image: "item2.png" });
     </script>
 </body>
 </html>
