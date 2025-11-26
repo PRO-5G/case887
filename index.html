@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Battle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Шапка с звёздами */
+        .header {
+            background: #2d2d2d;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #444;
+            position: relative;
+        }
+
+        .stars-count {
+            font-size: 24px;
+            color: #ffd700;
+            display: inline-block;
+        }
+
+        .add-stars-btn {
+            background: #4cd964;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        /* Анимация прокрутки */
+        .spin-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .spinning-items {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .spin-item {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            border: 3px solid #ffd700;
+            overflow: hidden;
+            background: #2d2d2d;
+        }
+
+        .spin-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .spin-text {
+            font-size: 24px;
+            color: #ffd700;
+            text-align: center;
+        }
+
+        /* Пополнение баланса */
+        .payment-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .payment-content {
+            background: #2d2d2d;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            border: 2px solid #444;
+        }
+
+        .payment-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .payment-tab {
+            flex: 1;
+            padding: 10px;
+            background: #3a3a3a;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .payment-tab.active {
+            background: #ff6b6b;
+        }
+
+        .promo-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #555;
+            background: #1a1a1a;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .apply-btn {
+            width: 100%;
+            padding: 12px;
+            background: #4cd964;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn {
+            width: 100%;
+            padding: 10px;
+            background: #555;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .soon-text {
+            text-align: center;
+            color: #888;
+            margin: 20px 0;
+        }
+
+        /* Остальные стили */
+        .cases-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .case-window {
+            background: #2d2d2d;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #444;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .case-window:hover {
+            transform: scale(1.05);
+            border-color: #ffd700;
+        }
+
+        .case-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+            margin: 0 auto 10px;
+            border: 2px solid #555;
+            overflow: hidden;
+        }
+
+        .case-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .case-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+
+        .case-price {
+            font-size: 16px;
+        }
+
+        .original-price {
+            text-decoration: line-through;
+            color: #888;
+            margin-right: 8px;
+        }
+
+        .discount-price {
+            color: #ff4444;
+            font-weight: bold;
+        }
+
+        .case-details {
+            display: none;
+            background: #2d2d2d;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #444;
+        }
+
+        .back-btn {
+            background: #555;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .case-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .selected-case-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 10px;
+            margin: 0 auto 15px;
+            border: 3px solid #555;
+            overflow: hidden;
+        }
+
+        .selected-case-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .open-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 15px 0;
+        }
+
+        .open-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .item-card {
+            background: #3a3a3a;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #555;
+        }
+
+        .item-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 5px;
+            margin: 0 auto 5px;
+            border: 1px solid #666;
+            overflow: hidden;
+        }
+
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .item-name {
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+
+        .item-value {
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .result {
+            text-align: center;
+            margin-top: 15px;
+            padding: 15px;
+            background: #333;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .coming-soon {
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка с звёздами -->
+        <div class="header">
+            <div class="stars-count">⭐ Звёзд: <span id="starsCount">0</span></div>
+            <button class="add-stars-btn" onclick="showPaymentModal()">+</button>
+        </div>
+
+        <!-- Анимация прокрутки -->
+        <div id="spinAnimation" class="spin-animation">
+            <div class="spinning-items">
+                <div class="spin-item"><img src="images/item1.png" alt="Календарь"></div>
+                <div class="spin-item"><img src="images/item2.png" alt="Роза"></div>
+                <div class="spin-item"><img src="images/item3.png" alt="Эскимо"></div>
+            </div>
+            <div class="spin-text" id="spinText">Открываем кейс...</div>
+        </div>
+
+        <!-- Модальное окно пополнения -->
+        <div id="paymentModal" class="payment-modal">
+            <div class="payment-content">
+                <div class="payment-tabs">
+                    <button class="payment-tab" onclick="switchTab('card')">Карта</button>
+                    <button class="payment-tab active" onclick="switchTab('promo')">Промокод</button>
+                </div>
+                
+                <div id="cardTab" style="display: none;">
+                    <div class="soon-text">💳 Оплата картой скоро будет доступна!</div>
+                </div>
+                
+                <div id="promoTab">
+                    <input type="text" class="promo-input" id="promoCode" placeholder="Введите промокод">
+                    <button class="apply-btn" onclick="applyPromoCode()">АКТИВИРОВАТЬ</button>
+                    <div id="promoResult" style="margin-top: 10px; text-align: center;"></div>
+                </div>
+                
+                <button class="close-btn" onclick="hidePaymentModal()">ЗАКРЫТЬ</button>
+            </div>
+        </div>
+
+        <!-- Выбор кейсов -->
+        <div id="casesSelection" class="cases-grid">
+            <!-- Кейс 1: Столовка -->
+            <div class="case-window" onclick="selectCase('stolovka')">
+                <div class="case-image">
+                    <img src="images/stolovka.png" alt="Столовка">
+                </div>
+                <div class="case-name">СТОЛОВКА</div>
+                <div class="case-price">
+                    <span class="original-price">49 звёзд</span>
+                    <span class="discount-price">39 звёзд</span>
+                </div>
+            </div>
+
+            <!-- Кейс 2: На создании -->
+            <div class="case-window coming-soon" onclick="selectCase('newcase')">
+                <div class="case-image">
+                    <img src="images/coming_soon.png" alt="Скоро">
+                </div>
+                <div class="case-name">СКОРО</div>
+                <div class="case-price">
+                    <span class="discount-price">??? звёзд</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Детали кейса Столовка -->
+        <div id="stolovkaDetails" class="case-details">
+            <button class="back-btn" onclick="backToSelection()">← Назад</button>
+            
+            <div class="case-header">
+                <div class="selected-case-image">
+                    <img src="images/stolovka.png" alt="Столовка">
+                </div>
+                <div class="case-name">СТОЛОВКА</div>
+                <div class="case-price">
+                    <span class="original-price">49 звёзд</span>
+                    <span class="discount-price">39 звёзд</span>
+                </div>
+            </div>
+            
+            <button class="open-btn" onclick="openCase('stolovka')">ОТКРЫТЬ КЕЙС</button>
+            
+            <div class="items-grid">
+                <!-- Предмет 1 -->
+                <div class="item-card">
+                    <div class="item-image">
+                        <img src="images/item1.png" alt="Календарь">
+                    </div>
+                    <div class="item-name">Календарь</div>
+                    <div class="item-value">10 звёзд</div>
+                </div>
+                <!-- Предмет 2 -->
+                <div class="item-card">
+                    <div class="item-image">
+                        <img src="images/item2.png" alt="Роза">
+                    </div>
+                    <div class="item-name">Роза</div>
+                    <div class="item-value">15 звёзд</div>
+                </div>
+                <!-- Предмет 3 -->
+                <div class="item-card">
+                    <div class="item-image">
+                        <img src="images/item3.png" alt="Эскимо">
+                    </div>
+                    <div class="item-name">Эскимо</div>
+                    <div class="item-value">15 звёзд</div>
+                </div>
+                <!-- Предмет 4 -->
+                <div class="item-card">
+                    <div class="item-image">
+                        <img src="images/item4.png" alt="Кнопка любви">
+                    </div>
+                    <div class="item-name">Кнопка любви</div>
+                    <div class="item-value">25 звёзд</div>
+                </div>
+                <!-- Предмет 5 -->
+                <div class="item-card">
+                    <div class="item-image">
+                        <img src="images/item5.png" alt="Мишка">
+                    </div>
+                    <div class="item-name">Мишка</div>
+                    <div class="item-value">50 звёзд</div>
+                </div>
+                <!-- Предмет 6 -->
+                <div class="item-card">
+                    <div class="item-image">
+                        <img src="images/item6.png" alt="Мэшик">
+                    </div>
+                    <div class="item-name">Мэшик</div>
+                    <div class="item-value">75 звёзд</div>
+                </div>
+            </div>
+            
+            <div id="stolovkaResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let stars = 0;
+        let usedPromoCodes = new Set();
+        
+        // Промокоды (одноразовые)
+        const promoCodes = {
+            'WELCOME100': 100,
+            'BONUS500': 500,
+            'MEGA1000': 1000,
+            'ULTRA5000': 5000,
+            'LEGEND10000': 10000
+        };
+
+        // Данные кейсов с новыми названиями
+        const cases = {
+            stolovka: {
+                name: "СТОЛОВКА",
+                price: 39,
+                originalPrice: 49,
+                items: [
+                    { name: "Календарь", value: 10 },
+                    { name: "Роза", value: 15 },
+                    { name: "Эскимо", value: 15 },
+                    { name: "Кнопка любви", value: 25 },
+                    { name: "Мишка", value: 50 },
+                    { name: "Мэшик", value: 75 }
+                ]
+            }
+        };
+
+        function updateStars() {
+            document.getElementById('starsCount').textContent = stars;
+        }
+
+        function showPaymentModal() {
+            document.getElementById('paymentModal').style.display = 'flex';
+        }
+
+        function hidePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+            document.getElementById('promoResult').textContent = '';
+            document.getElementById('promoCode').value = '';
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.payment-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.getElementById('cardTab').style.display = 'none';
+            document.getElementById('promoTab').style.display = 'none';
+            document.getElementById(tab + 'Tab').style.display = 'block';
+        }
+
+        function applyPromoCode() {
+            const promoCode = document.getElementById('promoCode').value.toUpperCase();
+            const resultElement = document.getElementById('promoResult');
+            
+            if (usedPromoCodes.has(promoCode)) {
+                resultElement.innerHTML = '<span style="color: #ff4444;">❌ Промокод уже использован!</span>';
+                return;
+            }
+            
+            if (promoCodes[promoCode]) {
+                const bonus = promoCodes[promoCode];
+                stars += bonus;
+                usedPromoCodes.add(promoCode);
+                updateStars();
+                resultElement.innerHTML = `<span style="color: #4cd964;">✅ Промокод активирован! +${bonus} звёзд!</span>`;
+                document.getElementById('promoCode').value = '';
+                
+                // Автозакрытие через 2 секунды
+                setTimeout(hidePaymentModal, 2000);
+            } else {
+                resultElement.innerHTML = '<span style="color: #ff4444;">❌ Неверный промокод!</span>';
+            }
+        }
+
+        function selectCase(caseId) {
+            if (caseId === 'newcase') {
+                alert('Кейс в разработке! 🛠️');
+                return;
+            }
+            
+            document.getElementById('casesSelection').style.display = 'none';
+            document.getElementById(caseId + 'Details').style.display = 'block';
+        }
+
+        function backToSelection() {
+            document.querySelectorAll('.case-details').forEach(detail => {
+                detail.style.display = 'none';
+            });
+            document.getElementById('casesSelection').style.display = 'grid';
+            document.querySelectorAll('.result').forEach(result => {
+                result.style.display = 'none';
+            });
+        }
+
+        function openCase(caseId) {
+            const caseData = cases[caseId];
+            if (stars < caseData.price) {
+                alert('Недостаточно звёзд! Пополните баланс.');
+                showPaymentModal();
+                return;
+            }
+            
+            // Запускаем анимацию
+            const spinAnimation = document.getElementById('spinAnimation');
+            const spinText = document.getElementById('spinText');
+            spinAnimation.style.display = 'flex';
+            spinText.textContent = 'Открываем кейс...';
+            
+            // Спимним звёзды
+            stars -= caseData.price;
+            updateStars();
+            
+            // Имитация прокрутки
+            setTimeout(() => {
+                spinText.textContent = 'Определяем приз...';
+                
+                setTimeout(() => {
+                    // Выбираем случайный предмет
+                    const randomIndex = Math.floor(Math.random() * caseData.items.length);
+                    const wonItem = caseData.items[randomIndex];
+                    
+                    spinText.textContent = `🎉 Вы выиграли: ${wonItem.name}!`;
+                    
+                    setTimeout(() => {
+                        spinAnimation.style.display = 'none';
+                        
+                        // Показываем результат
+                        const result = document.getElementById(caseId + 'Result');
+                        result.innerHTML = `
+                            <h3>🎉 ВЫ ВЫИГРАЛИ!</h3>
+                            <div style="margin: 10px 0; font-size: 18px;">${wonItem.name}</div>
+                            <div style="color: #ffd700;">${wonItem.value} звёзд</div>
+                        `;
+                        result.style.display = 'block';
+                        
+                        // Добавляем выигранные звёзды
+                        setTimeout(() => {
+                            stars += wonItem.value;
+                            updateStars();
+                            result.innerHTML += `<div style="margin-top: 10px; color: #4cd964;">+${wonItem.value} звёзд добавлено!</div>`;
+                        }, 1000);
+                        
+                    }, 2000);
+                }, 2000);
+            }, 2000);
+        }
+
+        // Инициализация
+        updateStars();
+    </script>
+</body>
+</html>
